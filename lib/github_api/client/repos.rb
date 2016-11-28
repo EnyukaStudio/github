@@ -20,14 +20,6 @@ module Github
       'statistics',
       'statuses'
 
-    DEFAULT_REPO_OPTIONS = {
-      "homepage"   => "https://github.com",
-      "private"    => false,
-      "has_issues" => true,
-      "has_wiki"   => true,
-      "has_downloads" => true
-    }.freeze
-
     REQUIRED_REPO_OPTIONS = %w[ name ]
 
     VALID_REPO_OPTIONS = %w[
@@ -166,6 +158,21 @@ module Github
     end
     alias :find :get
 
+    # Get a repository
+    #
+    # @example
+    #  github = Github.new
+    #  github.repos.get_by_id 'repo-id'
+    #  github.repos.get_by_id id: 'repo-id'
+    #  github.repos(id: 'repo-id').get_by_id
+    #
+    def get_by_id(*args)
+      arguments(args, required: [:id])
+
+      get_request("/repositories/#{arguments.id}", arguments.params)
+    end
+    alias :find_by_id :get_by_id
+
     # Create a new repository for the autheticated user.
     #
     # @param [Hash] params
@@ -229,9 +236,9 @@ module Github
 
       # Requires authenticated user
       if (org = params.delete('org') || org)
-        post_request("/orgs/#{org}/repos", params.merge_default(DEFAULT_REPO_OPTIONS))
+        post_request("/orgs/#{org}/repos", params)
       else
-        post_request('/user/repos', params.merge_default(DEFAULT_REPO_OPTIONS))
+        post_request("/user/repos", params)
       end
     end
 
@@ -313,7 +320,7 @@ module Github
         assert_required %w[ name ]
       end
 
-      patch_request("/repos/#{arguments.user}/#{arguments.repo}", arguments.params.merge_default(DEFAULT_REPO_OPTIONS))
+      patch_request("/repos/#{arguments.user}/#{arguments.repo}", arguments.params)
     end
 
     # Delete a repository
